@@ -1,16 +1,40 @@
+// authModel.ts
 import pool from '../config/db';
 
-// Buscar usuario en MySQL por email
 export const findUserByEmail = async (email: string, isAdmin: boolean): Promise<any> => {
-    const table = isAdmin ? 'Admins' : 'Users';
-    const [rows]: any = await pool.query(`SELECT * FROM ${table} WHERE email = ?`, [email]);
-    return rows.length ? rows[0] : null;
+    try {
+        let query, params;
+        
+        if (isAdmin) {
+            query = `SELECT id_admin, name_Admin, email, password_Admin, registration_date FROM Admins WHERE email = ?`;
+        } else {
+            query = `SELECT id_user, name_User, email_User, password_User, registration_date FROM Users WHERE email_User = ?`;
+        }
+        
+        const [rows]: any = await pool.query(query, [email]);
+        
+        // Debug: Imprimir resultados
+        console.log('Query:', query);
+        console.log('Email buscado:', email);
+        console.log('Resultados encontrados:', rows);
+        
+        return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+        console.error('Error en findUserByEmail:', error);
+        throw error;
+    }
 };
 
-// Registrar nuevo usuario en MySQL
-export const registerUser = async (name: string, email: string, password: string, image: string | null = null): Promise<number> => {
+// Mantener el método registerUser como está
+export const registerUser = async (
+    name: string, 
+    email: string, 
+    password: string, 
+    image: string | null = null
+): Promise<number> => {
     const [result]: any = await pool.query(
-        `INSERT INTO Users (name_User, email_User, password_User, image) VALUES (?, ?, ?, ?)`,
+        `INSERT INTO Users (name_User, email_User, password_User, image) 
+         VALUES (?, ?, ?, ?)`,
         [name, email, password, image]
     );
     return result.insertId;
