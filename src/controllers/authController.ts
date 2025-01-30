@@ -3,79 +3,82 @@ import { findUserByEmail, registerUser } from '../models/authModel';
 import { hashPassword, comparePassword, generateToken } from '../config/auth';
 import admin from '../config/firebase';
 
-// 🔹 Iniciar sesión con email y contraseña (MySQL + JWT)
 export const loginWithEmail = async (req: Request, res: Response): Promise<void> => {
-    const { email, password, isAdmin } = req.body;
+    const { email, password } = req.body;
 
     try {
-        const user = await findUserByEmail(email, isAdmin);
-        
+        // Primero intentamos buscar un admin
+        let user = await findUserByEmail(email, true); // true para buscar en tabla de admins
+        let isAdmin = true;
+
+        // Si no es admin, buscamos en usuarios normales
         if (!user) {
-            res.status(404).json({ error: 'Usuario no encontrado' });
+            user = await findUserByEmail(email, false);
+            isAdmin = false;
+        }
+
+        if (!user) {
+            res.status(401).json({ error: 'Email no registrado' });
             return;
         }
 
-        // Verificar contraseña según el tipo de usuario
-        const storedPassword = isAdmin ? user.password_Admin : user.password_User;
-        const isValidPassword = await comparePassword(password, storedPassword);
+        const isValidPassword = await comparePassword(
+            password, 
+            isAdmin ? user.password_Admin : user.password_User
+        );
 
         if (!isValidPassword) {
-            res.status(401).json({ error: 'Credenciales inválidas' });
+            res.status(401).json({ error: 'Contraseña incorrecta' });
             return;
         }
 
-        // Generar JWT con los campos correctos
-        const token = generateToken({
-            id: isAdmin ? user.id_admin : user.id_user,
-            email: isAdmin ? user.email : user.email_User,
+        const token = generateToken({ 
+            id: isAdmin ? user.id_admin : user.id_user, 
+            email: isAdmin ? user.email_Admin : user.email_User,
+            isAdmin 
         });
 
-        // Devolver respuesta con los datos del usuario
-        res.json({
-            token,
+        res.json({ 
+            success: true,
+            token, 
             user: {
                 id: isAdmin ? user.id_admin : user.id_user,
                 name: isAdmin ? user.name_Admin : user.name_User,
-                email: isAdmin ? user.email : user.email_User,
-                registration_date: user.registration_date,
+                email: isAdmin ? user.email_Admin : user.email_User,
+                isAdmin
             }
         });
     } catch (error) {
-        console.error('Error en loginWithEmail:', error);
-        res.status(500).json({ error: 'Error del servidor' });
+        console.error('Error en login:', error);
+        res.status(500).json({ error: 'Error en el servidor' });
     }
 };
 
-// 🔹 Iniciar sesión con Google o Facebook (Firebase + MySQL + JWT)
 export const loginWithFirebase = async (req: Request, res: Response): Promise<void> => {
     const { idToken } = req.body;
 
     try {
-        // Verificar token de Firebase
         const decodedToken = await admin.auth().verifyIdToken(idToken);
-        const { uid, email, name, picture } = decodedToken;
+        const { email, name, picture } = decodedToken;
 
         if (!email) {
             res.status(400).json({ error: 'Email is required' });
             return;
         }
 
-        // Buscar usuario en MySQL
         let user = await findUserByEmail(email, false);
-
         if (!user) {
-            // Registrar nuevo usuario en MySQL si no existe
-            const hashedPassword = await hashPassword(uid);
+            const hashedPassword = await hashPassword(email);
             const userId = await registerUser(name || 'Unnamed User', email, hashedPassword, picture || null);
             user = { id_user: userId, name_User: name, email_User: email, image: picture };
         }
 
-        // Generar JWT
-        const token = generateToken({
-            id: user.id_user,
+        const token = generateToken({ 
+            id: user.id_user, 
             email: user.email_User || '',
+            isAdmin: false // Los usuarios de Firebase siempre son usuarios normales
         });
-
+        
         res.json({ token, user });
     } catch (error) {
         res.status(401).json({ error: 'Invalid Firebase Token' });
