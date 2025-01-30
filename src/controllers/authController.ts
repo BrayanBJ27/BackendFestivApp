@@ -21,6 +21,9 @@ export const loginWithEmail = async (req: Request, res: Response): Promise<void>
             res.status(401).json({ error: 'Email no registrado' });
             return;
         }
+        const storedPassword = isAdmin ? user.password_Admin : user.password_User;
+        console.log("🔹 Password almacenado en DB:", storedPassword);
+        console.log("🔹 Password ingresado:", password);
 
         const isValidPassword = await comparePassword(
             password, 
