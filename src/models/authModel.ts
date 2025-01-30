@@ -6,18 +6,20 @@ export const findUserByEmail = async (email: string, isAdmin: boolean): Promise<
         let query, params;
         
         if (isAdmin) {
-            query = `SELECT id_admin, name_Admin, email, password_Admin, registration_date FROM Admins WHERE email = ?`;
+            query = `SELECT id_admin, name_Admin, email, password_Admin AS password, registration_date 
+                     FROM Admins WHERE email = ?`;
         } else {
-            query = `SELECT id_user, name_User, email_User, password_User, registration_date FROM Users WHERE email_User = ?`;
+            query = `SELECT id_user, name_User, email_User, password_User, registration_date 
+         FROM Users WHERE email_User = ?`;
         }
         
         const [rows]: any = await pool.query(query, [email]);
-        
-        // Debug: Imprimir resultados
+
+        // Debug: Imprimir resultados en consola
         console.log('Query:', query);
         console.log('Email buscado:', email);
         console.log('Resultados encontrados:', rows);
-        
+
         return rows.length > 0 ? rows[0] : null;
     } catch (error) {
         console.error('Error en findUserByEmail:', error);
