@@ -2,12 +2,7 @@ import pool from '../config/db';
 
 export const getFestivals = async (): Promise<any[]> => {
     const [rows]: [any[], any] = await pool.query('SELECT * FROM Festivals');
-    return rows; // Ahora está correctamente tipado como 'any[]'
-};
-
-export const getFestivalById = async (id: number): Promise<any> => {
-    const [rows]: [any[], any] = await pool.query('SELECT * FROM Festivals WHERE id_festival = ?', [id]);
-    return rows[0];
+    return rows;
 };
 
 export const createFestival = async (festivalData: any): Promise<number> => {
