@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getFestivals, getFestivalById, createFestival } from '../models/festivalModel';
+import { getFestivals, createFestival } from '../models/festivalModel';
 
 export const getAllFestivals = async (req: Request, res: Response): Promise<void> => {
     try {
