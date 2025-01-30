@@ -9,31 +9,40 @@ export const loginWithEmail = async (req: Request, res: Response): Promise<void>
 
     try {
         const user = await findUserByEmail(email, isAdmin);
+        
         if (!user) {
-            res.status(404).json({ error: 'User not found' });
+            res.status(404).json({ error: 'Usuario no encontrado' });
             return;
         }
 
-        // Verificar contraseña
-        const isValidPassword = await comparePassword(
-            password,
-            user.password_Admin || user.password_User || ''
-        );
+        // Verificar contraseña según el tipo de usuario
+        const storedPassword = isAdmin ? user.password_Admin : user.password_User;
+        const isValidPassword = await comparePassword(password, storedPassword);
 
         if (!isValidPassword) {
-            res.status(401).json({ error: 'Invalid credentials' });
+            res.status(401).json({ error: 'Credenciales inválidas' });
             return;
         }
 
-        // Generar JWT
+        // Generar JWT con los campos correctos
         const token = generateToken({
-            id: user.id_admin || user.id_user,
-            email: user.email_Admin || user.email_User || '',
+            id: isAdmin ? user.id_admin : user.id_user,
+            email: isAdmin ? user.email : user.email_User,
         });
 
-        res.json({ token, user });
+        // Devolver respuesta con los datos del usuario
+        res.json({
+            token,
+            user: {
+                id: isAdmin ? user.id_admin : user.id_user,
+                name: isAdmin ? user.name_Admin : user.name_User,
+                email: isAdmin ? user.email : user.email_User,
+                registration_date: user.registration_date,
+            }
+        });
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error en loginWithEmail:', error);
+        res.status(500).json({ error: 'Error del servidor' });
     }
 };
 
