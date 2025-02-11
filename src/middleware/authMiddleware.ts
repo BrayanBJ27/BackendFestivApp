@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types/express';
 import admin from '../config/firebase';
 import jwt from 'jsonwebtoken';
-import pool from '../config/db';
+import poolPromise from '../config/db'; // Asegurarse de que estamos importando `poolPromise`
 
 const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey';
 
@@ -12,12 +12,15 @@ export const verifyFirebaseToken = async (req: AuthenticatedRequest, res: Respon
 
         if (!token) {
             res.status(401).json({ error: 'Unauthorized' });
-            return; // Agregar `return` evita que se ejecute `next()`
+            return;
         }
 
         // Verificar token de Firebase
         const decodedToken = await admin.auth().verifyIdToken(token);
         const { email } = decodedToken;
+
+        // Obtener la conexión al pool de MySQL
+        const pool = await poolPromise; // 🔹 Esperamos la conexión antes de usar `.query()`
 
         // Buscar usuario en MySQL
         const [userRows]: any = await pool.query('SELECT * FROM Admins WHERE email = ?', [email]);
