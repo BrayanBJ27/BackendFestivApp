@@ -8,14 +8,20 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
 
         // Validaciones básicas
         if (!name || !email || !password) {
-            res.status(400).json({ error: 'All fields are required' });
+            res.status(400).json({ 
+                success: false,
+                error: 'All fields are required' 
+            });
             return;
         }
 
         // Verificar si el usuario ya existe
         const userExists = await checkUserExists(email);
         if (userExists) {
-            res.status(400).json({ error: 'Email already registered' });
+            res.status(409).json({ // 409 Conflict
+                success: false,
+                error: 'This email is already registered'
+            });
             return;
         }
 
@@ -32,6 +38,9 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
         });
     } catch (error) {
         console.error('Error in user registration:', error);
-        res.status(500).json({ error: 'Server error during registration' });
+        res.status(500).json({
+            success: false,
+            error: 'Server error during registration'
+        });
     }
 };
