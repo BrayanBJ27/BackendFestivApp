@@ -2,8 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import connectMongo from './config/mongo';
-import poolPromise from './config/db';
-import festivalRoutes from './routes/festivalRoutes';
+import { testConnections } from './config/db';
+import typeFestivalRoutes from './routes/typeFestivalRoutes';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 
@@ -13,7 +13,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Rutas de festivales
-app.use('/festivals', festivalRoutes);
+app.use('/typefestival', typeFestivalRoutes);
 
 // Rutas de autenticación
 app.use('/auth', authRoutes);
@@ -24,13 +24,8 @@ app.use('/users', userRoutes);
 // Conectar a MongoDB
 connectMongo();
 
-// 🔹 Esperar la conexión a MySQL
-poolPromise
-    .then(async (pool) => {
-        const connection = await pool.getConnection();
-        console.log('✅ Connected to MySQL');
-        connection.release();
-    })
-    .catch((err) => console.error('❌ MySQL connection error:', err));
+// Probar conexiones a las bases de datos
+testConnections()
+    .catch((err) => console.error('❌ Database connection error:', err));
 
 export default app;
