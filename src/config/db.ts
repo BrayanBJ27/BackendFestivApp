@@ -27,20 +27,28 @@ const localDBConfig = {
     queueLimit: 0
 };
 
-// Función para probar AlwaysData y decidir qué base de datos usar
-const testConnection = async (): Promise<Pool> => {
+// Crear pools para ambas bases de datos
+export const localPool = mysql.createPool(localDBConfig);
+export const alwaysDataPool = mysql.createPool(alwaysDataConfig);
+
+// Función para probar las conexiones
+export const testConnections = async () => {
     try {
-        const connection = await mysql.createConnection(alwaysDataConfig);
-        console.log('✅ Conexión exitosa a AlwaysData');
-        await connection.end();
-        return mysql.createPool(alwaysDataConfig); // Si AlwaysData funciona, crea el pool con AlwaysData
+        const localConnection = await localPool.getConnection();
+        console.log('✅ Conexión exitosa a la base de datos local');
+        localConnection.release();
     } catch (error) {
-        console.error('⚠ No se pudo conectar a AlwaysData. Usando la base de datos local.');
-        return mysql.createPool(localDBConfig); // Si falla, usa la base de datos local
+        console.error('❌ Error conectando a la base de datos local:', error);
+    }
+
+    try {
+        const alwaysConnection = await alwaysDataPool.getConnection();
+        console.log('✅ Conexión exitosa a AlwaysData');
+        alwaysConnection.release();
+    } catch (error) {
+        console.error('❌ Error conectando a AlwaysData:', error);
     }
 };
 
-// Exportar la promesa del pool
-const poolPromise = testConnection();
-
-export default poolPromise;
+// Ya no necesitamos exportar poolPromise
+export default { localPool, alwaysDataPool };
