@@ -6,6 +6,8 @@ import { testConnections } from './config/db';
 import typeFestivalRoutes from './routes/typeFestivalRoutes';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
+import provinceRoutes from './routes/provinceRoutes';
+import cityRoutes from './routes/cityRoutes';
 
 const app = express();
 
@@ -20,6 +22,12 @@ app.use('/auth', authRoutes);
 
 // Ruta para usuarios
 app.use('/users', userRoutes);
+
+// Rutas para provincias
+app.use('/provinces', provinceRoutes);
+
+// Ruta para ciudad
+app.use('/cities', cityRoutes);
 
 // Conectar a MongoDB
 connectMongo();
