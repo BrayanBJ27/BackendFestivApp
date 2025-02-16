@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import provinceRoutes from './routes/provinceRoutes';
 import cityRoutes from './routes/cityRoutes';
+import festivityRoutes from './routes/festivityRoutes';
 
 const app = express();
 
@@ -16,6 +17,9 @@ app.use(bodyParser.json());
 
 // Rutas de festivales
 app.use('/typefestival', typeFestivalRoutes);
+
+//Rutas para festividades
+app.use('/festivals', festivityRoutes);
 
 // Rutas de autenticación
 app.use('/auth', authRoutes);
