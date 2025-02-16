@@ -38,3 +38,15 @@ export const getCitiesByProvince = async (province: string): Promise<DbOperation
     throw error;
   }
 };
+
+export const getLocationIdByCityAndProvince = async (city: string, province: string): Promise<DbOperationResult> => {
+    try {
+      return await executeOnBothDbs(
+        'SELECT id_location FROM Locations WHERE city = ? AND province = ? LIMIT 1',
+        [city, province]
+      );
+    } catch (error) {
+      console.error('❌ Error in getLocationIdByCityAndProvince:', error);
+      throw error;
+    }
+  };
