@@ -6,10 +6,22 @@ import { createNewFestival as createNewFestivalModel, getFestivals } from '../mo
 export const getAllFestivals = async (req: Request, res: Response): Promise<void> => {
     try {
         const result = await getFestivals();
+
+        // Convertir cada "image" de Buffer a Base64 en local y remote
+        const localFestivals = (result.local || []).map((festival: any) => ({
+            ...festival,
+            image: festival.image ? Buffer.from(festival.image).toString('base64') : null
+        }));
+
+        const remoteFestivals = (result.remote || []).map((festival: any) => ({
+            ...festival,
+            image: festival.image ? Buffer.from(festival.image).toString('base64') : null
+        }));
+
         res.json({
-            local: result.local,
-            remote: result.remote,
-            data: result.remote
+            local: localFestivals,
+            remote: remoteFestivals,
+            data: remoteFestivals
         });
     } catch (error) {
         console.error('Error fetching festivals:', error);
