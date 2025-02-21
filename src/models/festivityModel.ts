@@ -45,6 +45,52 @@ export const getFestivals = async (): Promise<DbOperationResult> => {
     }
 };
 
+// Función para obtener un festival por su id
+export const getFestivalById = async (id: number): Promise<any> => {
+    const query = `
+      SELECT f.*, ft.name_FType, l.city, l.province 
+      FROM Festivals f
+      LEFT JOIN FestivalTypes ft ON f.id_festival_type = ft.id_festival_type
+      LEFT JOIN Locations l ON f.id_location = l.id_location
+      WHERE f.id_festival = ?
+    `;
+    const result = await executeOnBothDbs(query, [id]);
+    // Suponiendo que los resultados sean iguales en ambas bases,
+    // se podría retornar uno de ellos o fusionar la información según sea necesario
+    return result.remote[0] || result.local[0];
+  };
+
+  // Función para actualizar un festival
+export const updateFestival = async (id: number, data: any): Promise<any> => {
+    const query = `
+      UPDATE Festivals 
+      SET name_Festival = ?, 
+          description_Festival = ?, 
+          start_date = ?, 
+          end_date = ?, 
+          id_festival_type = ?, 
+          id_location = ?,
+          image = ?
+      WHERE id_festival = ?
+    `;
+    return await executeOnBothDbs(query, [
+      data.name_Festival,
+      data.description_Festival,
+      data.start_date,
+      data.end_date,
+      data.id_festival_type,
+      data.id_location,
+      data.image,
+      id
+    ]);
+  };
+
+  // Función para eliminar un festival
+export const deleteFestival = async (id: number): Promise<any> => {
+    const query = `DELETE FROM Festivals WHERE id_festival = ?`;
+    return await executeOnBothDbs(query, [id]);
+  };
+
 // Create festival type in both databases
 export const createNewFestival = async (
     name_Festival: string,
