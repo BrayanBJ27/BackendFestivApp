@@ -75,3 +75,77 @@ export const checkUserExists = async (email: string): Promise<boolean> => {
         throw error;
     }
 };
+
+export const getUserByEmail = async (email: string): Promise<User | null> => {
+    try {
+      const [rows] = await localPool.query("SELECT * FROM Users WHERE email_User = ?", [email]);
+      if ((rows as any[]).length > 0) {
+        return (rows as any[])[0];
+      }
+      return null;
+    } catch (error) {
+      console.error("Error obteniendo usuario:", error);
+      throw error;
+    }
+};
+
+// Obtener usuario por ID
+export const getUserById = async (id: number): Promise<User | null> => {
+    try {
+      const [rows] = await localPool.query("SELECT * FROM Users WHERE id_user = ?", [id]);
+      return (rows as any[]).length > 0 ? (rows as any[])[0] : null;
+    } catch (error) {
+      console.error("Error obteniendo usuario:", error);
+      throw error;
+    }
+};
+
+// Actualizar datos del usuario
+export const updateUserInDB = async (
+    id: number,
+    name: string,
+    email: string,
+    password: string,
+    image: string | null
+  ): Promise<boolean> => {
+    try {
+      // Actualizar en paralelo ambas bases de datos
+      const [localResult, alwaysDataResult] = await Promise.allSettled([
+        localPool.query(
+          `UPDATE Users SET name_User = ?, email_User = ?, password_User = ?, image = ? WHERE id_user = ?`,
+          [name, email, password, image, id]
+        ),
+        alwaysDataPool.query(
+          `UPDATE Users SET name_User = ?, email_User = ?, password_User = ?, image = ? WHERE id_user = ?`,
+          [name, email, password, image, id]
+        )
+      ]);
+  
+      // Manejar resultados
+      let localSuccess = false;
+      let alwaysDataSuccess = false;
+  
+      // Verificar si la actualización en la DB local fue exitosa
+      if (localResult.status === "fulfilled") {
+        const [result] = localResult.value;
+        localSuccess = (result as any).affectedRows > 0;
+      } else {
+        console.error("❌ Error actualizando en DB local:", localResult.reason);
+      }
+  
+      // Verificar si la actualización en AlwaysData fue exitosa
+      if (alwaysDataResult.status === "fulfilled") {
+        const [result] = alwaysDataResult.value;
+        alwaysDataSuccess = (result as any).affectedRows > 0;
+      } else {
+        console.error("❌ Error actualizando en AlwaysData:", alwaysDataResult.reason);
+      }
+  
+      // Retornar true si al menos una de las dos fue exitosa
+      return localSuccess || alwaysDataSuccess;
+  
+    } catch (error) {
+      console.error("Error actualizando usuario:", error);
+      throw error;
+    }
+  };
