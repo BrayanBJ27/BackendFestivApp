@@ -9,6 +9,7 @@ import userRoutes from './routes/userRoutes';
 import provinceRoutes from './routes/provinceRoutes';
 import cityRoutes from './routes/cityRoutes';
 import festivityRoutes from './routes/festivityRoutes';
+import eventRoutes from './routes/eventRoutes';
 
 const app = express();
 
@@ -32,6 +33,9 @@ app.use('/provinces', provinceRoutes);
 
 // Ruta para ciudad
 app.use('/cities', cityRoutes);
+
+// Rutas para eventos
+app.use('/events', eventRoutes);
 
 // Conectar a MongoDB
 connectMongo();
