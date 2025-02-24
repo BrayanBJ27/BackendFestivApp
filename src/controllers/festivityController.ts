@@ -1,5 +1,6 @@
 // festivityController.ts
 import { Request, Response } from 'express';
+import { RatingAtlas, RatingLocal } from '../models/ratingModel';
 import { 
   createNewFestival as createNewFestivalModel, 
   getFestivals, 
@@ -127,9 +128,9 @@ export const getFestivalById = async (req: Request, res: Response): Promise<void
       console.error('Error fetching festival:', error);
       res.status(500).json({ error: 'Error fetching festival' });
     }
-  };
+};
 
- // Función para actualizar un festival
+// Función para actualizar un festival
 export const updateFestival = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
@@ -179,9 +180,9 @@ export const updateFestival = async (req: Request, res: Response): Promise<void>
       console.error('Error updating festival:', error);
       res.status(500).json({ error: 'Error updating festival' });
     }
-  };  
+};  
 
-  // Función para eliminar un festival
+// Función para eliminar un festival
 export const deleteFestival = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
@@ -195,4 +196,49 @@ export const deleteFestival = async (req: Request, res: Response): Promise<void>
       console.error('Error deleting festival:', error);
       res.status(500).json({ error: 'Error deleting festival' });
     }
-  };
+};
+
+// Nueva función para obtener festividades con rating
+export const getLatestFestivals = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // 1. Consulta MySQL para obtener todos los festivales
+    const result = await getFestivals(); 
+    const mysqlFestivals = result.remote || [];
+
+    // 2. Para cada festival, busca su rating en ambas fuentes de MongoDB
+    const festivalsWithRating = await Promise.all(
+      mysqlFestivals.map(async (festival: any) => {
+        // Usamos Promise.allSettled para consultar ambas fuentes y evitar que se detenga si una falla
+        const results = await Promise.allSettled([
+          RatingAtlas.findOne({ festivalId: festival.id_festival }),
+          RatingLocal.findOne({ festivalId: festival.id_festival }),
+        ]);
+        
+        // Tomamos el mayor rating obtenido o 0 si ninguna devuelve resultado
+        let rating = 0;
+        results.forEach(result => {
+          if (result.status === 'fulfilled' && result.value && result.value.rating > rating) {
+            rating = result.value.rating;
+          }
+        });
+
+        // Convertir la imagen a base64 si existe
+        let imageBase64 = null;
+        if (festival.image) {
+          imageBase64 = Buffer.from(festival.image).toString('base64');
+        }
+
+        return {
+          ...festival,
+          image: imageBase64,
+          rating
+        };
+      })
+    );
+
+    res.json({ data: festivalsWithRating });
+  } catch (error) {
+    console.error('Error fetching latest festivals with rating:', error);
+    res.status(500).json({ error: 'Error fetching latest festivals with rating' });
+  }
+};
