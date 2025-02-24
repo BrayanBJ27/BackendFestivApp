@@ -13,6 +13,9 @@ import eventRoutes from './routes/eventRoutes';
 
 const app = express();
 
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
+
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -39,6 +42,15 @@ app.use('/events', eventRoutes);
 
 // Conectar a MongoDB
 connectMongo();
+
+// Manejador de errores global
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('Error global:', err);
+    res.status(err.status || 500).json({
+      message: err.message || 'Error interno del servidor',
+      error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+  });
 
 // Probar conexiones a las bases de datos
 testConnections()
