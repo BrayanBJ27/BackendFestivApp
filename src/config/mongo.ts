@@ -1,29 +1,54 @@
-import mongoose from 'mongoose';
+import mongoose, { Connection } from 'mongoose';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// URI de conexión a MongoDB Atlas y Local
-const MONGO_ATLAS_URI = process.env.MONGO_ATLAS_URI || 'mongodb+srv://FestivApp:adminFA25%2A@festivapp.kuusk.mongodb.net/?retryWrites=true&w=majority&appName=FestivApp';
+const MONGO_ATLAS_URI = process.env.MONGO_ATLAS_URI;
 const MONGO_LOCAL_URI = process.env.MONGO_LOCAL_URI || 'mongodb://localhost:27017/FestivApp';
 
-// Función para conectar a MongoDB
-const connectMongo = async () => {
-    try {
-        // Intentar conectar primero a MongoDB Atlas
-        await mongoose.connect(MONGO_ATLAS_URI);
-        console.log('✅ Conectado a MongoDB Atlas');
-    } catch (error) {
-        console.error('⚠ No se pudo conectar a MongoDB Atlas. Intentando con MongoDB local...');
-        
-        try {
-            // Si falla Atlas, intentar con la base de datos local
-            await mongoose.connect(MONGO_LOCAL_URI);
-            console.log('✅ Conectado a MongoDB local');
-        } catch (err) {
-            console.error('❌ Error al conectar a MongoDB:', err);
-        }
-    }
+// Verificar que existe la variable de entorno para Atlas
+if (!MONGO_ATLAS_URI) {
+  console.warn('⚠️ La variable de entorno MONGO_ATLAS_URI no está configurada');
+  console.warn('⚠️ La conexión a MongoDB Atlas no estará disponible');
+}
+
+// Conexión a MongoDB Atlas (solo si está configurada la variable de entorno)
+export const atlasConnection = MONGO_ATLAS_URI 
+  ? mongoose.createConnection(MONGO_ATLAS_URI)
+  : null;
+
+if (atlasConnection) {
+  atlasConnection.on('connected', () => {
+    console.log('✅ Connected to MongoDB Atlas');
+  });
+  atlasConnection.on('error', (err) => {
+    console.error('❌ Atlas connection error:', err);
+  });
+}
+
+// Conexión a MongoDB Local
+export const localConnection = mongoose.createConnection(MONGO_LOCAL_URI);
+localConnection.on('connected', () => {
+  console.log('✅ Connected to MongoDB Local');
+});
+localConnection.on('error', (err) => {
+  console.error('❌ Local connection error:', err);
+});
+
+// Define el tipo para las conexiones
+interface Connections {
+  localConnection: Connection;
+  atlasConnection?: Connection | null;
+}
+
+// Función para establecer las conexiones
+const connectMongo = async (): Promise<Connections> => {
+  const connections: Connections = {
+    localConnection,
+    atlasConnection: atlasConnection
+  };
+  
+  return connections;
 };
 
 export default connectMongo;
