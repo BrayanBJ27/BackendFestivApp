@@ -10,6 +10,9 @@ import provinceRoutes from './routes/provinceRoutes';
 import cityRoutes from './routes/cityRoutes';
 import festivityRoutes from './routes/festivityRoutes';
 import eventRoutes from './routes/eventRoutes';
+import ratingRoutes from './routes/ratingRoutes';
+import notificationRoutes from './routes/notificationRoutes';
+import deviceTokenRoutes from './routes/deviceTokenRoutes';
 
 const app = express();
 
@@ -39,6 +42,19 @@ app.use('/cities', cityRoutes);
 
 // Rutas para eventos
 app.use('/events', eventRoutes);
+
+// Rutas para ratings
+app.use('/ratings', ratingRoutes);
+
+// Rutas para notificaciones
+app.use('/notifications', notificationRoutes);
+
+// Rutas para dispositivos
+app.use('/devices', deviceTokenRoutes);
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Conectar a MongoDB
 connectMongo();
