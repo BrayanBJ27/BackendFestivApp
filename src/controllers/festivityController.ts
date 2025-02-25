@@ -6,7 +6,8 @@ import {
   getFestivals, 
   getFestivalById as getFestivalByIdModel,
   updateFestival as updateFestivalModel,
-  deleteFestival as deleteFestivalModel
+  deleteFestival as deleteFestivalModel,
+  getFestivalDetailsById,
 } from '../models/festivityModel';
 
 // Función para obtener todos los festivales
@@ -240,5 +241,20 @@ export const getLatestFestivals = async (req: Request, res: Response): Promise<v
   } catch (error) {
     console.error('Error fetching latest festivals with rating:', error);
     res.status(500).json({ error: 'Error fetching latest festivals with rating' });
+  }
+};
+
+export const getFestivalDetails = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const festival = await getFestivalDetailsById(Number(id));
+    if (!festival) {
+      res.status(404).json({ error: 'Festival not found' });
+      return;
+    }
+    res.json(festival);
+  } catch (error) {
+    console.error('Error fetching festival details:', error);
+    res.status(500).json({ error: 'Error fetching festival details' });
   }
 };
