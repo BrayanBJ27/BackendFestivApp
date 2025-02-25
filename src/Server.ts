@@ -1,7 +1,15 @@
 import app from './App';
 
-const PORT = process.env.PORT || 3000;
+import connectMongo from './config/mongo';
 
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-});
+(async () => {
+  try {
+    await connectMongo();
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+      console.log(`Server running at http://localhost:${port}`);
+    });
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+  }
+})();
