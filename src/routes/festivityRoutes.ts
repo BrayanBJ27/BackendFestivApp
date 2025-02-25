@@ -6,7 +6,8 @@ import {
   createNewFestival, 
   updateFestival, 
   deleteFestival, 
-  getLatestFestivals
+  getLatestFestivals,
+  getFestivalDetails,
 } from '../controllers/festivityController';
 
 const router = Router();
@@ -19,6 +20,7 @@ const largeUrlEncodedParser = express.urlencoded({ limit: '100mb', extended: tru
 router.get('/list', getAllFestivals);
 router.get('/latest', getLatestFestivals);
 router.get('/:id', getFestivalById);
+router.get('/detail/:id', getFestivalDetails);
 
 // Rutas POST y PUT con límites aumentados
 router.post('/register', largeJsonParser, largeUrlEncodedParser, createNewFestival);
