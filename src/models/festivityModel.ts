@@ -1,5 +1,6 @@
 import { localPool, alwaysDataPool } from '../config/db';
 import { Pool } from 'mysql2/promise';
+import { RatingAtlas, RatingLocal } from './ratingModel';
 
 // Interface for database operations result
 interface DbOperationResult {
@@ -149,3 +150,47 @@ export const verifyConsistency = async (): Promise<boolean> => {
         return false;
     }
 };
+
+// Función para obtener un festival por su id y agregar el rating desde MongoDB
+export const getFestivalDetailsById = async (id: number): Promise<any> => {
+    const query = `
+      SELECT 
+            f.id_festival, 
+            f.name_Festival, 
+            f.description_Festival, 
+            f.start_date, 
+            f.end_date, 
+            f.image,
+            ft.name_FType,
+            l.city,
+            l.province
+            FROM Festivals f
+            LEFT JOIN FestivalTypes ft ON f.id_festival_type = ft.id_festival_type
+            LEFT JOIN Locations l ON f.id_location = l.id_location
+            WHERE f.id_festival = ?
+    `;
+    const result = await executeOnBothDbs(query, [id]);
+    // Se asume que los resultados de ambas fuentes son iguales; usamos el remoto o el local
+    const festival = result.remote[0] || result.local[0];
+    if (!festival) return null;
+  
+    // Convertir la imagen a Base64 si existe
+    if (festival.image) {
+      festival.image = Buffer.from(festival.image).toString('base64');
+    }
+  
+    // Consultar en ambas conexiones de MongoDB para obtener el rating
+    const results = await Promise.allSettled([
+      RatingAtlas.findOne({ festivalId: id }),
+      RatingLocal.findOne({ festivalId: id })
+    ]);
+  
+    let rating = 0;
+    results.forEach(res => {
+      if (res.status === 'fulfilled' && res.value && res.value.rating > rating) {
+        rating = res.value.rating;
+      }
+    });
+    festival.rating = rating;
+    return festival;
+  };
