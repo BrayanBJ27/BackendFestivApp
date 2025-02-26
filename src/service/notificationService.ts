@@ -11,18 +11,18 @@ interface IFestival extends RowDataPacket {
 
 export async function generateUpcomingNotifications(): Promise<number> {
   try {
-    // Calculate date two months from now
-    const twoMonthsLater = dayjs().add(2, 'month').format('YYYY-MM-DD');
+    // Calculate date one year from now
+    const oneYearLater = dayjs().add(1, 'year').format('YYYY-MM-DD');
     const today = dayjs().format('YYYY-MM-DD');
     
-    console.log(`🔍 Searching for festivals between ${today} and ${twoMonthsLater}`);
+    console.log(`🔍 Searching for festivals between ${today} and ${oneYearLater}`);
 
-    // Query MySQL: festivals starting from today to 2 months later
+    // Query MySQL: festivals starting from today to one year later
     const [festivals] = await localPool.query<IFestival[]>(`
       SELECT id_festival, name_Festival, start_date
       FROM Festivals
       WHERE start_date <= ? AND start_date >= CURDATE()
-    `, [twoMonthsLater]);
+    `, [oneYearLater]);
 
     console.log(`📅 Found ${festivals.length} upcoming festivals`);
     
