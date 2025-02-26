@@ -3,7 +3,7 @@ import { generateUpcomingNotifications } from '../service/notificationService';
 import { NotificationLocal } from '../models/notificationModel';
 import { sendPushNotification } from '../service/pushNotificationService';
 
-export const createNotificationsForTwoMonths = async (req: Request, res: Response): Promise<void> => {
+export const createNotificationsForOneYear = async (req: Request, res: Response): Promise<void> => {
   try {
     const count = await generateUpcomingNotifications();
     res.json({ message: `Created ${count} notifications for upcoming festivals` });
