@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { createNotificationsForTwoMonths, listNotifications } from '../controllers/notificationController';
+import { createNotificationsForOneYear, listNotifications } from '../controllers/notificationController';
 import { sendPendingNotifications, sendSpecificNotification } from '../controllers/sendNotificationController';
 
 const router = Router();
 
 // Generate notifications
-router.post('/generate', createNotificationsForTwoMonths);
+router.post('/generate', createNotificationsForOneYear);
 
 // List notifications
 router.get('/list', listNotifications);
