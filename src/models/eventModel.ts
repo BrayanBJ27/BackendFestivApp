@@ -60,14 +60,14 @@ export const getEventById = async (id: number): Promise<any> => {
 // Obtiene los eventos filtrados por el id de la festividad
 export const getEventsByFestival = async (festivityId: number): Promise<any> => {
   const query = `
-    SELECT 
-      id_event,
-      name_Event,
-      description_Event,
-      event_date,
-      hour_event,
-      id_festival,
-      location
+    SELECT
+    id_event,
+    name_Event,
+    description_Event,
+    event_date,
+    hour_event AS event_time,
+    location AS location_name,
+    id_festival
     FROM Events
     WHERE id_festival = ?
   `;
